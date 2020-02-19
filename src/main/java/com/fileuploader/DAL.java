@@ -1,9 +1,6 @@
 package com.fileuploader;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import javax.persistence.Query;
+import javax.persistence.*;
 import java.util.List;
 
 public class DAL {
@@ -29,6 +26,34 @@ public class DAL {
 		}
 		finally {
 			entityManager.close();
+		}
+	}
+	
+	public static void addFolder(String name, String folderId){
+		EntityManager em= getEntityManagerFactory().createEntityManager();
+		
+		try{
+			em.getTransaction().begin();
+			Folder folder= new Folder(name,folderId);
+			em.persist(folder);
+			em.getTransaction().commit();
+		}
+		finally {
+			em.close();
+		}
+	}
+	
+	public static Folder getFolder(String name){
+		EntityManager em= getEntityManagerFactory().createEntityManager();
+		
+		try{
+			Query query= em.createQuery("Select f from Folder f where f.name= :name", Folder.class);
+			query.setParameter("name",name);
+			List<Folder> folders= query.getResultList();
+			return folders.isEmpty()?null:folders.get(0);
+		}
+		finally {
+			em.close();
 		}
 	}
 	

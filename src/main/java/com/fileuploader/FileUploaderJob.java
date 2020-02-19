@@ -38,6 +38,8 @@ public class FileUploaderJob implements Job {
 							Paths.get(resources.getDatabaseBackupsPath()+fileName),
 							LinkOption.NOFOLLOW_LINKS)){
 						
+						String folderId=null;
+						
 						String[] filesInDirectory=FileUploader.
 								getFilesInDirectory(resources.getDatabaseBackupsPath()+fileName);
 						
@@ -47,30 +49,32 @@ public class FileUploaderJob implements Job {
 							
 							String dirName= fileName+"_"+ currentDate;
 							
+							Folder folder= DAL.getFolder(dirName);
+							
 							com.google.api.services.drive.model.File gDriveDirectory=null;
 							
-							
-							
-							gDriveDirectory=
-									GoogleDriveUploader.createGoogleDriveFolder(
-											GoogleDriveUploader.BASE_BACKUPS_FOLDERID,dirName);
-							
-							if(gDriveDirectory==null){
-								Utility.log("Could not create google drive directory -> "+dirName ,Level.INFO);
-								continue;
+							if(folder==null){
+								gDriveDirectory=
+										GoogleDriveUploader.createGoogleDriveFolder(
+												GoogleDriveUploader.BASE_BACKUPS_FOLDERID,dirName);
+								
+								if(gDriveDirectory==null){
+									Utility.log("Could not create google drive directory -> "+dirName ,Level.INFO);
+									continue;
+								}
+								
+								folderId=gDriveDirectory.getId();
+								
+								DAL.addFolder(dirName,folderId);
 							}
-							
-							//put folder id
-							GoogleDriveUploader.FOLDER_IDS_MAP.put(fileName,gDriveDirectory.getId());
-							
-							//Avoids reuploading the folder
-							DAL.addFile(dirName);
+							else{
+								folderId=folder.getFolderId();
+							}
 							
 							for(String file: filesInDirectory){
 								fileInSubFolder=true;
 								String fileSeparator= resources.getRuntime().equals("linux")?"/":"\\";
-								uploadFileToGoogleDrive(gDriveDirectory==null?GoogleDriveUploader.FOLDER_IDS_MAP.get(fileName):
-										gDriveDirectory.getId(),resources.getDatabaseBackupsPath()+ fileName+ fileSeparator+ file);
+								uploadFileToGoogleDrive(folderId,resources.getDatabaseBackupsPath()+ fileName+ fileSeparator+ file);
 							}
 						}
 						
@@ -128,7 +132,7 @@ public class FileUploaderJob implements Job {
 			}
 			
 			if(uploaded){
-				boolean deleted=FileUploader.deleteFile(filePath);
+				boolean deleted=false;//FileUploader.deleteFile(filePath);
 				
 				if(!deleted){
 					Utility.log("Could not delete the file: "+ fileName,Level.INFO);

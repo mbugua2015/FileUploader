@@ -583,7 +583,7 @@ public class FileUploader {
 		}
 	}
 
-	public static void uploadFileToGoogleStorage(String filePath){
+	public synchronized static void uploadFileToGoogleStorage(String filePath){
 		EfisalesResource resources= Utility.getResources();
 
 		String filename=filePath.substring(filePath.lastIndexOf("\\")+1);

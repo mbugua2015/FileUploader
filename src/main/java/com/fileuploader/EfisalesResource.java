@@ -58,8 +58,9 @@ public class EfisalesResource {
     String SalesRepAppointmentsQueue;
     String AppEnvironment;
     String InfluxDbUri;
-    String KafkaUrl;
+    String KafkaUrl, GcpProjectId,GcpBlobsBucket;
     String StagingDefaultMac,JdbcDatasource,ApplicationId;
+
     String UploaderDbPath;
     boolean SmtpSecure,DeleteFilesOnUpload,ExecuteBackgroundJobs,
             UpdateUserTrackingStatus, AuthenticateRedisConnections,
@@ -613,7 +614,23 @@ public class EfisalesResource {
 
     public void setDeleteOldDbBackups(boolean DeleteOldDbBackups) {
         this.DeleteOldDbBackups = DeleteOldDbBackups;
-    }   
+    }
+
+    public String getGcpProjectId() {
+        return GcpProjectId;
+    }
+
+    public void setGcpProjectId(String gcpProjectId) {
+        GcpProjectId = gcpProjectId;
+    }
+
+    public String getGcpBlobsBucket() {
+        return GcpBlobsBucket;
+    }
+
+    public void setGcpBlobsBucket(String gcpBlobsBucket) {
+        GcpBlobsBucket = gcpBlobsBucket;
+    }
 
     public static enum AppEnvironments {
         STAGING("staging"),

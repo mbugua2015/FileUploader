@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
-public class GoogleDriveUploader {
+public class GoogleDriveWorker {
 	
 	
 	public static final ConcurrentHashMap<String,String>
@@ -130,6 +130,10 @@ public class GoogleDriveUploader {
 		}
 		
 		return filesList;
+	}
+
+	public void deleteFilesOlderThanDays(int days){
+
 	}
 
 }

@@ -84,7 +84,7 @@ public class GDriveQuickStart {
 		Credential credential = getCredentials(HTTP_TRANSPORT);
 		
 		// 5: Create Google Drive Service.
-		Drive service = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential) //
+		Drive service = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
 				.setApplicationName(APPLICATION_NAME).build();
 		
 		// Print the names and IDs for up to 10 files.

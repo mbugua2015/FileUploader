@@ -7,7 +7,6 @@ import org.quartz.JobExecutionException;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.logging.Level;
@@ -55,8 +54,8 @@ public class FileUploaderJob implements Job {
 							
 							if(folder==null){
 								gDriveDirectory=
-										GoogleDriveUploader.createGoogleDriveFolder(
-												GoogleDriveUploader.BASE_BACKUPS_FOLDERID,dirName);
+										GoogleDriveWorker.createGoogleDriveFolder(
+												GoogleDriveWorker.BASE_BACKUPS_FOLDERID,dirName);
 								
 								if(gDriveDirectory==null){
 									Utility.log("Could not create google drive directory -> "+dirName ,Level.INFO);
@@ -82,7 +81,7 @@ public class FileUploaderJob implements Job {
 					else {
 						String filepath=resources.getDatabaseBackupsPath()+fileName;
 						fileInSubFolder=false;
-						uploadFileToGoogleDrive(GoogleDriveUploader.BASE_BACKUPS_FOLDERID,filepath);
+						uploadFileToGoogleDrive(GoogleDriveWorker.BASE_BACKUPS_FOLDERID,filepath);
 					}
 				
 				}
@@ -124,7 +123,7 @@ public class FileUploaderJob implements Job {
 				//Using folder id instead of the actual folder name
 				
 				com.google.api.services.drive.model.File uploadedFile=
-						GoogleDriveUploader.createFileFromJavaIOFile(parentDirectory,
+						GoogleDriveWorker.createFileFromJavaIOFile(parentDirectory,
 								Files.probeContentType(file.toPath()),fileName,file);
 				
 				uploaded=uploadedFile!=null;
@@ -154,4 +153,5 @@ public class FileUploaderJob implements Job {
 			throws JobExecutionException {
 		uploadFiles();
 	}
+
 }

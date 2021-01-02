@@ -1,5 +1,9 @@
 package com.fileuploader;
 
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
 import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
@@ -66,49 +70,6 @@ public class FileUploader {
 		uploadLocation = resources.getUploadsPath();
 		basePath = uploadLocation;
 	}
-	
-	/*public static void uploadOrderReferencesFromExcelFiles(EntityManagerFactory emf, UserTransaction utx) {
-		EfisalesResource efisalesResources = Utility.getResources();
-		ProductOrderReferenceImportJpaController productOrderReferenceImportJpaController =
-				new ProductOrderReferenceImportJpaController(
-						utx, emf
-				);
-		
-		ProductOrderReferenceService porService = new ProductOrderReferenceService(emf, utx);
-		ProductOrderReferenceImportRequest importRequest =
-				productOrderReferenceImportJpaController.findNextToProcess(Utility.getHostMacAddress());
-		
-		if (importRequest != null && importRequest.getId() != null
-				&& importRequest.getId() > 0) {
-			
-			try {
-				importRequest.setProcessing(true);
-				productOrderReferenceImportJpaController.edit(importRequest);
-			} catch (Exception ex) {
-				Utility.logStackTrace(ex);
-			}
-			
-			try {
-				porService.importOrderReferences(importRequest,
-						efisalesResources.getClientsUploadsPath() + importRequest.getFileName());
-				updateOrderImportRequestProcessed(importRequest, emf, utx);
-			} catch (Exception e) {
-				//updateOrderImportRequestProcessed(importRequest, emf, utx);
-				Utility.logStackTrace(e);
-			}
-		}
-	}*/
-	
-	/*private static void updateOrderImportRequestProcessed(ProductOrderReferenceImportRequest importRequest, EntityManagerFactory emf, UserTransaction utx) {
-		ProductOrderReferenceImportJpaController porImportReq = new ProductOrderReferenceImportJpaController(utx, emf);
-		try {
-			importRequest.setProcessed(true);
-			importRequest.setProcessing(false);
-			porImportReq.edit(importRequest);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}*/
 	
 	public List<String> getFiles() {
 		return files;
@@ -610,6 +571,66 @@ public class FileUploader {
 			catch(Exception ex){
 				Utility.logStackTrace(ex);
 			}
+		}
+	}
+
+	public static void uploadFilesToGoogleCloudStorage(){
+		EfisalesResource resources= Utility.getResources();
+		String[] files= getFilesInDirectory(resources.getUploadsPath());
+
+		for(String file: files){
+			uploadFileToGoogleStorage(resources.getUploadsPath()+file);
+		}
+	}
+
+	public static void uploadFileToGoogleStorage(String filePath){
+		EfisalesResource resources= Utility.getResources();
+
+		String filename=filePath.substring(filePath.lastIndexOf("\\")+1);
+
+		if(DAL.fileExists(filename)) return;
+
+		Utility.log("Uploading file: "+ filePath+ ", to google storage", Level.INFO);
+
+		Storage googleStorage= StorageOptions.newBuilder().
+				setProjectId(resources.getGcpProjectId()).build().getService();
+
+		BlobId blobId= BlobId.of(resources.getGcpBlobsBucket(),filename);
+		BlobInfo blobInfo= BlobInfo.newBuilder(blobId).build();
+
+		try{
+			googleStorage.create(blobInfo, Files.readAllBytes(Paths.get(filePath)));
+			DAL.addFile(filename);
+			deleteFile(filePath);
+			Utility.log("Uploaded file: "+ filePath+ ", to google storage", Level.INFO);
+		}
+		catch (Exception ex){
+			Utility.logStackTrace(ex);
+		}
+	}
+
+	public static void downloadAzureBlobs(){
+
+		CloudBlobContainer blobsContainer= getBlobContainer();
+
+		try{
+			EfisalesResource resources= Utility.getResources();
+
+			for(ListBlobItem blobItem: blobsContainer.listBlobs()){
+				String path=blobItem.getUri().getPath();
+				String filename=path.substring(path.lastIndexOf("/")+1);
+
+				if(!DAL.fileExists(filename) && !Files.exists(Paths.get(resources.getUploadsPath()+filename))){
+					Utility.log("URI: "+ blobItem.getUri().toString(), Level.INFO);
+					downloadFile(blobItem.getUri().toString(),resources.getUploadsPath() + filename);
+				}
+				else{
+					Utility.log(filename+ " exists, skipping", Level.INFO);
+				}
+			}
+		}
+		catch (Exception ex){
+
 		}
 	}
 

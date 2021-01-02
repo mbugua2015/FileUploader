@@ -29,8 +29,37 @@ public class FileUploaderApp {
 							.withIntervalInSeconds(20)
 							.repeatForever())
 					.build();
+
+			JobDetail downloadsJob = newJob(AzureDownloads.class)
+					.withIdentity("myJob2", "group1")
+					.build();
+
+			Trigger downloadsTrigger = newTrigger()
+					.withIdentity("myTrigger2", "group1")
+					.startNow()
+					.withSchedule(simpleSchedule()
+							.withIntervalInSeconds(30)
+							.repeatForever())
+					.build();
 			
-			scheduler.scheduleJob(job,trigger);
+			scheduler.scheduleJob(downloadsJob,downloadsTrigger);
+
+			JobDetail googleCloudStorageUploadsJob = newJob(UploadFilesToGoogleStorage.class)
+					.withIdentity("myJob3", "group1")
+					.build();
+
+			Trigger googleCloudStorageUploadsTrigger = newTrigger()
+					.withIdentity("myTrigger3", "group1")
+					.startNow()
+					.withSchedule(simpleSchedule()
+							.withIntervalInSeconds(30)
+							.repeatForever())
+					.build();
+
+			scheduler.scheduleJob(googleCloudStorageUploadsJob,
+					googleCloudStorageUploadsTrigger);
+
+			//FileUploader.uploadFilesToGoogleCloudStorage();
 		}
 		catch (Exception ex){
 			Utility.logStackTrace(ex);
